@@ -126,7 +126,8 @@ async function searchProducts(keyword){
     const r=await fetch("/api/search",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({keyword,sort_type:Number($("sort").value)})});
     const d=await r.json();
     if(!r.ok) throw new Error(d.error?.message || "A busca falhou.");
-    if(d.mode==="live" && !d.synthetic) setStatus("API Shopee respondeu",true);\n    lastOffers=d.data.offers||[];
+    if(d.mode==="live" && !d.synthetic) setStatus("API Shopee respondeu",true);
+    lastOffers=d.data.offers||[];
     $("resultCount").textContent=lastOffers.length+" produtos";
     $("results").replaceChildren();
     if(!lastOffers.length){showError("Nenhum produto encontrado com esse termo. Tente uma busca mais específica.");return;}
@@ -151,7 +152,8 @@ function addProductCard(p){
   const trendLine=el("p","text-xs mt-1 "+trendColor,trend+(p.sales_change_since_last_scan!==null?" ("+p.sales_change_since_last_scan+")":""));
   body.append(trendLine);
   const commission=p.commission_rate_fraction ? (Number(p.commission_rate_fraction)*100).toFixed(1).replace(".",",")+"% comissão estimada" : "Comissão não informada";
-  body.append(el("p","muted text-xs mt-1",commission));\n  if(p.search_keyword) body.append(el("p","muted text-xs mt-1","Categoria: "+p.search_keyword));
+  body.append(el("p","muted text-xs mt-1",commission));
+  if(p.search_keyword) body.append(el("p","muted text-xs mt-1","Categoria: "+p.search_keyword));
   const actions=el("div","flex flex-wrap gap-2 mt-3");
   const open=el("a","btn secondary text-xs","Abrir produto");
   open.href=p.product_url; open.target="_blank"; open.rel="noopener noreferrer";
@@ -193,7 +195,8 @@ async function autoDiscover(){
   }catch(e){showError(e.message || "Erro no garimpo automático.");}
   finally{$("autoBtn").disabled=false;$("autoBtn").textContent="Garimpo automático em 8 categorias";}
 }
-\nasync function loadTrends(){
+
+async function loadTrends(){
   $("trendList").replaceChildren(el("span","muted text-sm","Buscando sinais de tendência..."));
   try{
     const r=await fetch("/api/trends");
