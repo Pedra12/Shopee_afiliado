@@ -25,8 +25,9 @@ chaquopy {
         }
     }
     sourceSets {
-        getByName("main").python.srcDir("../..")
-        getByName("main").python.srcDir("../../vendor/shopee-br-affiliate-mcp/src")
+        getByName("main") {
+            srcDir("../../vendor/shopee-br-affiliate-mcp/src")
+        }
     }
 }
 dependencies {
