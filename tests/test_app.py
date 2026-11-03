@@ -25,6 +25,13 @@ class DashboardTests(unittest.TestCase):
         os.environ.pop("SHOPEE_MODE", None)
         os.environ.pop("SHOPEE_APP_DB", None)
 
+    def setUp(self):
+        import sqlite3
+        db = sqlite3.connect(os.environ["SHOPEE_APP_DB"])
+        db.execute("DELETE FROM product_snapshots")
+        db.commit()
+        db.close()
+
     def test_home_page_is_mobile_dashboard(self):
         response = self.client.get("/")
         self.assertEqual(response.status_code, 200)
