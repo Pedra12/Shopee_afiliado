@@ -173,7 +173,7 @@ class MainActivity : Activity() {
               const found = new Set();
               document.querySelectorAll('video').forEach(v => {
                 const u = v.currentSrc || v.src;
-                if (u && /^https:/.test(u) && /\\.mp4([?#]|$)/i.test(u)) found.add(u);
+                if (u && /^https:/.test(u) && /\.mp4([?#]|$)/i.test(u)) found.add(u);
               });
               document.querySelectorAll('script:not([src])').forEach(s => {
                 const t = s.textContent || '';
