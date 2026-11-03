@@ -20,7 +20,10 @@ chaquopy {
             install("trendspyg==1.9.0")
         }
     }
-    sourceSets { getByName("main").python.srcDir("../..") }
+    sourceSets {
+        getByName("main").python.srcDir("../..")
+        getByName("main").python.srcDir("../../vendor/shopee-br-affiliate-mcp/src")
+    }
 }
 dependencies {
     implementation("androidx.core:core-ktx:1.17.0")
