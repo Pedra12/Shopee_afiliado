@@ -1,0 +1,8 @@
+Upstream: https://github.com/jeffmonteiroo/shopee-br-affiliate-mcp
+Upstream branch: main
+Upstream commit reviewed: 39512856942cee4f6fb10aad7579602231ab0d0f
+Upstream version: 0.5.0
+License: MIT
+Vendored into this repository on 2026-11-03.
+The upstream LICENSE file is preserved in this directory.
+The upstream project's README states that live acceptance with a real Shopee account is still required; its automated API tests use simulated responses.
