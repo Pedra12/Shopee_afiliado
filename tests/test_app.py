@@ -57,8 +57,8 @@ class DashboardTests(unittest.TestCase):
         first = self.client.post("/api/search", json=body).json()
         second = self.client.post("/api/search", json=body).json()
         self.assertIsNone(first["data"]["offers"][0]["sales_change_since_last_scan"])
-        self.assertEqual(second["data"]["offers"][0]["sales_change_since_last_scan"], "0")
-        self.assertEqual(second["data"]["offers"][0]["trend_signal"], "stable")
+        self.assertIsNone(second["data"]["offers"][0]["sales_change_since_last_scan"])
+        self.assertEqual(second["data"]["offers"][0]["trend_signal"], "collecting_history")
 
     def test_empty_keyword_is_rejected(self):
         response = self.client.post("/api/search", json={"keyword": " "})
