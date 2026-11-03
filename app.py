@@ -119,7 +119,8 @@ async def lifespan(app):
 
 
 async def home(request: Request):
-    return FileResponse(ROOT / "templates" / "index.html")
+    template = Path(os.getenv("SHOPEE_TEMPLATE_PATH", str(ROOT / "templates" / "index.html")))
+    return FileResponse(template)
 
 
 async def status(request: Request):
