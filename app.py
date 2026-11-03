@@ -155,6 +155,50 @@ async def search(request: Request):
         return JSONResponse({"error": {"message": "A busca falhou. Confira as credenciais e o acesso à API."}}, status_code=502)
 
 
+
+async def discover(request: Request):
+    # Broad but bounded search set. Each request uses the official affiliate API.
+    keywords = ["casa", "beleza", "moda", "cozinha", "pet", "eletrônicos", "fitness", "acessórios"]
+    service = request.app.state.service
+    found = {}
+    errors = []
+    for keyword in keywords:
+        try:
+            result = await service.call("search_offers", {
+                "keyword": keyword, "sort_type": 2, "page": 1, "limit": 30
+            })
+            for offer in result["data"]["offers"]:
+                key = (str(offer["item_id"]), str(offer["shop_id"]))
+                if key not in found:
+                    offer["search_keyword"] = keyword
+                    found[key] = offer
+        except Exception as exc:
+            from shopee_mcp.core import SafeError
+            if isinstance(exc, SafeError):
+                errors.append({"keyword": keyword, "code": exc.code, "message": exc.message})
+            else:
+                errors.append({"keyword": keyword, "message": "Consulta indisponível."})
+
+    grouped = {}
+    for offer in found.values():
+        grouped.setdefault(offer["search_keyword"], []).append(offer)
+    scored = []
+    for keyword, offers in grouped.items():
+        scored.extend(record_and_score(offers, keyword))
+    scored.sort(key=lambda offer: numeric(offer.get("sales")) or Decimal("-1"), reverse=True)
+    return JSONResponse({
+        "mode": service.provider.mode,
+        "synthetic": service.provider.mode == "fixture",
+        "data": {
+            "offers": scored[:50],
+            "keywords_scanned": keywords,
+            "unique_products": len(scored),
+            "errors": errors,
+            "observed_at": str(int(time()))
+        }
+    })
+
+
 async def trends(request: Request):
     if os.getenv("GOOGLE_TRENDS_ENABLED", "true").lower() != "true":
         return JSONResponse({"source": "disabled", "trends": [], "message": "Google Trends desativado."})
@@ -199,7 +243,7 @@ async def affiliate_link(request: Request):
 routes = [
     Route("/", home),
     Route("/api/status", status),
-    Route("/api/search", search, methods=["POST"]),
+    Route("/api/search", search, methods=["POST"]),\n    Route("/api/discover", discover, methods=["POST"]),
     Route("/api/trends", trends),
     Route("/api/link", affiliate_link, methods=["POST"]),
 ]
