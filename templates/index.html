@@ -109,7 +109,7 @@ async function loadStatus(){
     const r=await fetch("/api/status");
     const d=await r.json();
     const live=d.mode==="live" && !d.synthetic;
-    setStatus(live ? "API Shopee configurada" : "Modo demonstração", live);
+    setStatus(live ? "Live: teste pendente" : "Modo demonstração", false);
     if(!live) $("status").title="Dados sintéticos. Configure as credenciais locais para usar a API real.";
   }catch(e){setStatus("Serviço indisponível",false);}
 }
@@ -125,7 +125,7 @@ async function searchProducts(keyword){
     const r=await fetch("/api/search",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({keyword,sort_type:Number($("sort").value)})});
     const d=await r.json();
     if(!r.ok) throw new Error(d.error?.message || "A busca falhou.");
-    lastOffers=d.data.offers||[];
+    if(d.mode==="live" && !d.synthetic) setStatus("API Shopee respondeu",true);\n    lastOffers=d.data.offers||[];
     $("resultCount").textContent=lastOffers.length+" produtos";
     $("results").replaceChildren();
     if(!lastOffers.length){showError("Nenhum produto encontrado com esse termo. Tente uma busca mais específica.");return;}
