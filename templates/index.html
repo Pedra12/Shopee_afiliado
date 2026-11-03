@@ -109,9 +109,20 @@ async function loadStatus(){
   try{
     const r=await fetch("/api/status");
     const d=await r.json();
+    if(!r.ok) {
+      const code=d.error?.code || "API_ERROR";
+      setStatus("API: "+code,false);
+      $("status").title=d.error?.message || "A API não respondeu.";
+      return;
+    }
     const live=d.mode==="live" && !d.synthetic;
-    setStatus(live ? "Live: teste pendente" : "Modo demonstração", false);
-    if(!live) $("status").title="Dados sintéticos. Configure as credenciais locais para usar a API real.";
+    if(live && d.api_authenticated) {
+      setStatus(d.probe_products ? "API conectada" : "API conectada · 0 ofertas", !!d.probe_products);
+      $("status").title=d.message || "";
+    } else {
+      setStatus("Modo demonstração",false);
+      $("status").title=d.message || "Dados sintéticos. Configure as credenciais locais para usar a API real.";
+    }
   }catch(e){setStatus("Serviço indisponível",false);}
 }
 function showError(message){
@@ -125,12 +136,12 @@ async function searchProducts(keyword){
   try{
     const r=await fetch("/api/search",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({keyword,sort_type:Number($("sort").value)})});
     const d=await r.json();
-    if(!r.ok) throw new Error(d.error?.message || "A busca falhou.");
+    if(!r.ok) throw new Error((d.error?.code ? "["+d.error.code+"] " : "")+(d.error?.message || "A busca falhou."));
     if(d.mode==="live" && !d.synthetic) setStatus("API Shopee respondeu",true);
     lastOffers=d.data.offers||[];
     $("resultCount").textContent=lastOffers.length+" produtos";
     $("results").replaceChildren();
-    if(!lastOffers.length){showError("Nenhum produto encontrado com esse termo. Tente uma busca mais específica.");return;}
+    if(!lastOffers.length){showError("A Shopee respondeu, mas não retornou ofertas para este termo. Tente outro termo ou verifique a disponibilidade de ofertas na sua conta de afiliado.");return;}
     lastOffers.forEach(addProductCard);
   }catch(e){showError(e.message || "Erro ao consultar produtos.");}
   finally{$("searchBtn").disabled=false;$("searchBtn").textContent="Buscar produtos";}
