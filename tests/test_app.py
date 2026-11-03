@@ -26,8 +26,8 @@ class DashboardTests(unittest.TestCase):
         os.environ.pop("SHOPEE_APP_DB", None)
 
     def setUp(self):
-        import sqlite3
-        db = sqlite3.connect(os.environ["SHOPEE_APP_DB"])
+        from app import database
+        db = database()
         db.execute("DELETE FROM product_snapshots")
         db.commit()
         db.close()
