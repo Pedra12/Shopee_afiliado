@@ -23,9 +23,12 @@ VENDOR = ROOT / "vendor" / "shopee-br-affiliate-mcp"
 sys.path.insert(0, str(VENDOR / "src"))
 
 load_dotenv(ROOT / ".env")
-os.environ.setdefault("SHOPEE_VERIFIED_PROFILE", str(VENDOR / "examples" / "profile.official.json"))
-os.environ.setdefault("SHOPEE_HISTORY_DB", str(ROOT / "data" / "affiliate_history.sqlite3"))
-DB_PATH = Path(os.getenv("SHOPEE_APP_DB", str(ROOT / "data" / "products.sqlite3"))).expanduser()
+if not os.getenv("SHOPEE_VERIFIED_PROFILE", "").strip():
+    os.environ["SHOPEE_VERIFIED_PROFILE"] = str(VENDOR / "examples" / "profile.official.json")
+if not os.getenv("SHOPEE_HISTORY_DB", "").strip():
+    os.environ["SHOPEE_HISTORY_DB"] = str(ROOT / "data" / "affiliate_history.sqlite3")
+_db_setting = os.getenv("SHOPEE_APP_DB", "").strip()
+DB_PATH = Path(_db_setting).expanduser() if _db_setting else ROOT / "data" / "products.sqlite3"
 TREND_CACHE = {"expires": 0.0, "items": []}
 
 
@@ -67,12 +70,14 @@ def record_and_score(offers, keyword):
             item_id, shop_id = str(offer["item_id"]), str(offer["shop_id"])
             period_start = str(offer.get("period_start_raw") or "")
             period_end = str(offer.get("period_end_raw") or "")
-            previous = db.execute(
-                """SELECT sales FROM product_snapshots
-                   WHERE item_id=? AND shop_id=? AND period_start=? AND period_end=?
-                   ORDER BY id DESC LIMIT 1""",
-                (item_id, shop_id, period_start, period_end),
-            ).fetchone()
+            previous = None
+            if period_start and period_end:
+                previous = db.execute(
+                    """SELECT sales FROM product_snapshots
+                       WHERE item_id=? AND shop_id=? AND period_start=? AND period_end=?
+                       ORDER BY id DESC LIMIT 1""",
+                    (item_id, shop_id, period_start, period_end),
+                ).fetchone()
             sales = numeric(offer.get("sales"))
             previous_sales = numeric(previous[0]) if previous else None
             delta = (sales - previous_sales) if sales is not None and previous_sales is not None else None
