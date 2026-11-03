@@ -173,11 +173,11 @@ class MainActivity : Activity() {
               const found = new Set();
               document.querySelectorAll('video').forEach(v => {
                 const u = v.currentSrc || v.src;
-                if (u && /^https:/.test(u) && /.mp4([?#]|$)/i.test(u)) found.add(u);
+                if (u && /^https:/.test(u) && /\\.mp4([?#]|$)/i.test(u)) found.add(u);
               });
               document.querySelectorAll('script:not([src])').forEach(s => {
                 const t = s.textContent || '';
-                const re = /https?:\\?\/\\?\/[^"'\\s]*vod\\.susercontent\\.com[^"'\\s]*?\.mp4[^"'\\s]*/gi;
+                const re = /https?:\\?\/\\?\/[^"'\s]*?vod\.susercontent\.com[^"'\s]*?\.mp4[^"'\s]*/gi;
                 let m;
                 while ((m = re.exec(t)) !== null) {
                   found.add(m[0].replaceAll('\\/', '/').replaceAll('\\u0026', '&'));
