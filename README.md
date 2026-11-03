@@ -5,7 +5,7 @@ Painel mobile independente para garimpar produtos, consultar ofertas da Shopee B
 ## O que já está integrado
 
 - Backend Shopee Affiliate Open API incorporado em `vendor/shopee-br-affiliate-mcp/`, preservando o código original, os créditos e a licença MIT.
-- Pesquisa de produtos com ordenação por vendas, preço e comissão, conforme os campos liberados para a conta.
+- Garimpo automático em oito categorias, com deduplicação e ordenação por vendas.\n- Pesquisa de produtos com ordenação por vendas, preço e comissão, conforme os campos liberados para a conta.
 - Geração oficial de links de afiliado.
 - Histórico local de observações para comparar vendas, apenas quando a API fornece períodos comparáveis.
 - Sinais de tendência do Google Trends Brasil via `trendspyg` (RSS), com cache.
