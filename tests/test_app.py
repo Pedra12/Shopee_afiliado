@@ -60,6 +60,10 @@ class DashboardTests(unittest.TestCase):
         self.assertIsNone(second["data"]["offers"][0]["sales_change_since_last_scan"])
         self.assertEqual(second["data"]["offers"][0]["trend_signal"], "collecting_history")
 
+    def test_google_trends_adapter_is_installed(self):
+        from trendspyg import download_google_trends_rss
+        self.assertTrue(callable(download_google_trends_rss))
+
     def test_empty_keyword_is_rejected(self):
         response = self.client.post("/api/search", json={"keyword": " "})
         self.assertEqual(response.status_code, 400)
