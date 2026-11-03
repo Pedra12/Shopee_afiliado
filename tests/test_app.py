@@ -60,6 +60,14 @@ class DashboardTests(unittest.TestCase):
         self.assertIsNone(second["data"]["offers"][0]["sales_change_since_last_scan"])
         self.assertEqual(second["data"]["offers"][0]["trend_signal"], "collecting_history")
 
+    def test_automatic_discovery_scans_categories_in_fixture_mode(self):
+        response = self.client.post("/api/discover")
+        self.assertEqual(response.status_code, 200, response.text)
+        payload = response.json()
+        self.assertTrue(payload["synthetic"])
+        self.assertEqual(len(payload["data"]["keywords_scanned"]), 8)
+        self.assertEqual(payload["data"]["unique_products"], 0)
+
     def test_google_trends_adapter_is_installed(self):
         from trendspyg import download_google_trends_rss
         self.assertTrue(callable(download_google_trends_rss))
