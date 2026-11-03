@@ -124,11 +124,33 @@ async def home(request: Request):
 
 
 async def status(request: Request):
+    service = request.app.state.service
     try:
-        result = await request.app.state.service.call("affiliate_status", {})
-        return JSONResponse(result)
-    except Exception:
-        return JSONResponse({"error": {"message": "Não foi possível consultar o estado do serviço."}}, status_code=503)
+        result = await service.call("affiliate_status", {})
+        if service.provider.mode == "live":
+            probe = await service.call("search_offers", {
+                "keyword": "celular", "sort_type": 2, "page": 1, "limit": 1
+            })
+            count = len(probe["data"]["offers"])
+            return JSONResponse({
+                **result, "api_tested": True, "api_authenticated": True,
+                "probe_products": count,
+                "message": "API autenticada e retornou produtos." if count else
+                           "Autenticação aceita, mas a busca de teste não retornou ofertas."
+            })
+        return JSONResponse({**result, "api_tested": False,
+                             "message": "Modo demonstração: os produtos são exemplos fictícios."})
+    except Exception as exc:
+        from shopee_mcp.core import SafeError
+        if isinstance(exc, SafeError):
+            return JSONResponse({"mode": service.provider.mode, "api_tested": True,
+                                 "api_authenticated": False,
+                                 "error": {"code": exc.code, "message": exc.message}}, status_code=502)
+        return JSONResponse({"mode": service.provider.mode, "api_tested": True,
+                             "api_authenticated": False,
+                             "error": {"code": type(exc).__name__,
+                                       "message": "Falha interna ao consultar a API. Nenhuma credencial foi exibida."}},
+                            status_code=502)
 
 
 async def search(request: Request):
@@ -153,7 +175,8 @@ async def search(request: Request):
         from shopee_mcp.core import SafeError
         if isinstance(exc, SafeError):
             return JSONResponse({"error": {"code": exc.code, "message": exc.message}}, status_code=400)
-        return JSONResponse({"error": {"message": "A busca falhou. Confira as credenciais e o acesso à API."}}, status_code=502)
+        return JSONResponse({"error": {"code": type(exc).__name__,
+                                       "message": "Falha interna na busca. Nenhuma credencial foi exibida."}}, status_code=502)
 
 
 
