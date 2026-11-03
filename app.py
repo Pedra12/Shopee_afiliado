@@ -243,7 +243,8 @@ async def affiliate_link(request: Request):
 routes = [
     Route("/", home),
     Route("/api/status", status),
-    Route("/api/search", search, methods=["POST"]),\n    Route("/api/discover", discover, methods=["POST"]),
+    Route("/api/search", search, methods=["POST"]),
+    Route("/api/discover", discover, methods=["POST"]),
     Route("/api/trends", trends),
     Route("/api/link", affiliate_link, methods=["POST"]),
 ]
