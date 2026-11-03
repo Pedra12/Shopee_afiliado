@@ -185,7 +185,12 @@ async def discover(request: Request):
     scored = []
     for keyword, offers in grouped.items():
         scored.extend(record_and_score(offers, keyword))
-    scored.sort(key=lambda offer: numeric(offer.get("sales")) or Decimal("-1"), reverse=True)
+    def ranking(offer):
+        sales = numeric(offer.get("sales"))
+        commission = numeric(offer.get("commission_rate_fraction"))
+        return (sales if sales is not None else Decimal("-1"),
+                commission if commission is not None else Decimal("-1"))
+    scored.sort(key=ranking, reverse=True)
     return JSONResponse({
         "mode": service.provider.mode,
         "synthetic": service.provider.mode == "fixture",
