@@ -59,19 +59,19 @@ class MainActivity : Activity() {
             visibility = View.GONE
             setOnClickListener { detectVideos() }
         }
-        val settings = Button(this).apply {
+        val apiButton = Button(this).apply {
             text = "API"
             setOnClickListener { showConfig() }
         }
         top.addView(title, LinearLayout.LayoutParams(0, -2, 1f))
         top.addView(detectButton)
-        top.addView(settings)
+        top.addView(apiButton)
 
         web = WebView(this).apply {
-            settings.javaScriptEnabled = true
-            settings.domStorageEnabled = true
-            settings.javaScriptCanOpenWindowsAutomatically = false
-            settings.setSupportMultipleWindows(false)
+            this.settings.javaScriptEnabled = true
+            this.settings.domStorageEnabled = true
+            this.settings.javaScriptCanOpenWindowsAutomatically = false
+            this.settings.setSupportMultipleWindows(false)
             webChromeClient = WebChromeClient()
             addJavascriptInterface(VideoBridge(), "ShopeeNative")
             webViewClient = object : WebViewClient() {
