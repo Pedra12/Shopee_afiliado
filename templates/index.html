@@ -212,7 +212,8 @@ $("searchForm").addEventListener("submit",e=>{e.preventDefault();searchProducts(
 $("tabBest").addEventListener("click",()=>{activeTab="best";$("trendPanel").classList.add("hidden");$("tabBest").className="btn primary flex-1";$("tabTrends").className="btn secondary flex-1";});
 $("tabTrends").addEventListener("click",()=>{activeTab="trends";$("trendPanel").classList.remove("hidden");$("tabBest").className="btn secondary flex-1";$("tabTrends").className="btn primary flex-1";loadTrends();});
 $("refreshTrends").addEventListener("click",loadTrends);
-$("autoBtn").addEventListener("click",autoDiscover);\nloadStatus();
+$("autoBtn").addEventListener("click",autoDiscover);
+loadStatus();
 </script>
 </body>
 </html>
