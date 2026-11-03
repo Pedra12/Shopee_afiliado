@@ -192,6 +192,7 @@ async function autoDiscover(){
     $("results").replaceChildren();
     if(!lastOffers.length){showError("Nenhum produto retornado nessas categorias. Tente uma busca por palavra-chave.");return;}
     lastOffers.forEach(addProductCard);
+    if(d.data.errors?.length) $("results").append(el("p","muted text-xs",d.data.errors.length+" categoria(s) não responderam nesta consulta."));
   }catch(e){showError(e.message || "Erro no garimpo automático.");}
   finally{$("autoBtn").disabled=false;$("autoBtn").textContent="Garimpo automático em 8 categorias";}
 }
