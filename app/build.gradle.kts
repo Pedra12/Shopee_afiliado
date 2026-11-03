@@ -16,7 +16,11 @@ chaquopy {
         version = "3.11"
         buildPython("3.11")
         pip {
-            install("-r", "../../vendor/shopee-br-affiliate-mcp/requirements.lock")
+            install("httpx==0.28.1")
+            install("jsonschema==4.25.1")
+            install("starlette==1.7.0")
+            install("uvicorn==0.38.0")
+            install("python-dotenv==1.2.3")
             install("trendspyg==1.9.0")
         }
     }
