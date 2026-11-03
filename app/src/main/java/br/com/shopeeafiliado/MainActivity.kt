@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.os.Environment
 import android.view.Gravity
 import android.view.View
+import android.webkit.CookieManager
 import android.webkit.JavascriptInterface
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
@@ -218,7 +219,11 @@ class MainActivity : Activity() {
         }
         try {
             val request = DownloadManager.Request(uri)
-                .setTitle("Vídeo de produto")
+            val cookies = CookieManager.getInstance().getCookie(url)
+            if (!cookies.isNullOrBlank()) request.addRequestHeader("Cookie", cookies)
+            request.addRequestHeader("Referer", "https://shopee.com.br/")
+            request.addRequestHeader("User-Agent", web.settings.userAgentString)
+            request.setTitle("Vídeo de produto")
                 .setDescription("Download iniciado manualmente")
                 .setMimeType("video/mp4")
                 .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
