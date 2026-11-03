@@ -4,6 +4,11 @@ on:
     paths:
       - "vendor/shopee-br-affiliate-mcp/**"
       - ".github/workflows/shopee-backend.yml"
+      - "app.py"
+      - "tests/**"
+      - "templates/**"
+      - "requirements.txt"
+      - ".env.example"
   pull_request:
     paths:
       - "vendor/shopee-br-affiliate-mcp/**"
