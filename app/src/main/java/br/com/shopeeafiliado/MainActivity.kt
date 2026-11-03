@@ -143,6 +143,10 @@ class MainActivity : Activity() {
             assets.open("index.html").use { input ->
                 template.outputStream().use { output -> input.copyTo(output) }
             }
+            val profile = File(appFiles, "profile.official.json")
+            assets.open("profile.official.json").use { input ->
+                profile.outputStream().use { output -> input.copyTo(output) }
+            }
             if (!Python.isStarted()) Python.start(AndroidPlatform(this))
             Python.getInstance().getModule("mobile_server").callAttr(
                 "start_server",
