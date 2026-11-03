@@ -80,7 +80,7 @@
 
     <footer class="panel rounded-2xl p-4 mt-5">
       <p class="text-sm font-semibold mb-1">Sobre vídeos de produtos</p>
-      <p class="muted text-xs leading-relaxed">A API oficial de afiliados não fornece o arquivo de vídeo do anúncio. O painel não copia vídeos de terceiros nem tenta contornar os controles da Shopee. Materiais próprios ou autorizados podem ser organizados separadamente.</p>
+      <p class="muted text-xs leading-relaxed">A API oficial de afiliados não fornece o arquivo de vídeo do anúncio. No APK Android, abra a página do produto e use Detectar vídeo para procurar MP4s expostos pela página. O download é manual; use somente vídeos próprios ou autorizados. A disponibilidade depende do anúncio e da estrutura atual da Shopee.</p>
       <p class="muted text-xs mt-3">Os dados de tendência do Google são relativos e podem ficar temporariamente indisponíveis. A evolução de vendas só aparece depois de observações comparáveis do mesmo período.</p>
     </footer>
   </main>
@@ -156,7 +156,7 @@ function addProductCard(p){
   if(p.search_keyword) body.append(el("p","muted text-xs mt-1","Categoria: "+p.search_keyword));
   const actions=el("div","flex flex-wrap gap-2 mt-3");
   const open=el("a","btn secondary text-xs","Abrir produto");
-  open.href=p.product_url; open.target="_blank"; open.rel="noopener noreferrer";
+  open.href=p.product_url; open.target="_self"; open.rel="noopener noreferrer";
   actions.append(open);
   const linkBtn=el("button","btn primary text-xs","Gerar link");
   linkBtn.type="button";
