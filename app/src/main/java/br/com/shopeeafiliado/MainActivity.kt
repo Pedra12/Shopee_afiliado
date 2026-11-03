@@ -93,6 +93,8 @@ class MainActivity : Activity() {
                 }
             }
         }
+        CookieManager.getInstance().setAcceptCookie(true)
+        CookieManager.getInstance().setAcceptThirdPartyCookies(web, true)
         root.addView(top)
         root.addView(web, LinearLayout.LayoutParams(-1, 0, 1f))
         setContentView(root)
