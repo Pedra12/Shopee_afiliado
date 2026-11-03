@@ -14,7 +14,7 @@ android {
 chaquopy {
     defaultConfig {
         version = "3.11"
-        buildPython("3.11")
+        buildPython("python")
         pip {
             install("httpx==0.28.1")
             install("jsonschema==4.25.1")
