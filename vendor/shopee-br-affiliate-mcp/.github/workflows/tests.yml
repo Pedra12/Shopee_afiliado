@@ -1,0 +1,97 @@
+name: Tests
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.11', '3.12']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: python -m pip install -c requirements.lock .
+      - run: python -m pip check
+      - run: python -m unittest discover -s tests -v
+        env:
+          PYTHONPATH: src:tests
+      - run: python local_test.py --fixture --extended
+      - name: Build Docker image
+        if: matrix.python-version == '3.12'
+        run: docker build -t shopee-mcp:test .
+      - name: Test MCP in Docker
+        if: matrix.python-version == '3.12'
+        run: |
+          python - <<'PY'
+          import asyncio
+          from mcp import ClientSession, StdioServerParameters
+          from mcp.client.stdio import stdio_client
+
+          async def check():
+              params = StdioServerParameters(command="docker", args=["run", "--rm", "-i", "shopee-mcp:test", "--mode", "fixture"])
+              async with stdio_client(params) as (read, write):
+                  async with ClientSession(read, write) as session:
+                      initialized = await session.initialize()
+                      assert initialized.serverInfo.version == "0.5.0"
+                      assert len((await session.list_tools()).tools) == 17
+                      status = await session.call_tool("affiliate_status", {})
+                      assert not status.isError and status.structuredContent["synthetic"]
+              print("Docker MCP handshake, discovery and status: OK")
+
+          asyncio.run(asyncio.wait_for(check(), 30))
+          PY
+      - name: Build remote Docker target
+        if: matrix.python-version == '3.12'
+        run: docker build --target remote -t shopee-mcp:remote .
+      - name: Test remote Docker startup and persistent volume
+        if: matrix.python-version == '3.12'
+        run: |
+          python - <<'PYCODE'
+          import os
+          import subprocess
+          import time
+          import httpx
+          from cryptography.fernet import Fernet
+
+          os.environ["MCP_CREDENTIALS_KEY"] = Fernet.generate_key().decode()
+          origin = "http://127.0.0.1:8765"
+          subprocess.run(["docker", "volume", "create", "shopee-oauth-test"], check=True)
+          def healthy():
+              for _ in range(60):
+                  try:
+                      r = httpx.get(origin + "/health", timeout=2)
+                      if r.status_code == 200:
+                          assert r.json()["version"] == "0.5.0"
+                          return
+                  except httpx.HTTPError:
+                      pass
+                  time.sleep(0.5)
+              raise AssertionError("Remote Docker did not become healthy")
+          try:
+              subprocess.run(["docker", "run", "-d", "--name", "shopee-remote-test",
+                  "-p", "127.0.0.1:8765:8765", "-v", "shopee-oauth-test:/app/data",
+                  "-e", "MCP_CREDENTIALS_KEY", "-e", "MCP_PUBLIC_URL=" + origin,
+                  "-e", "MCP_OWNER_KEY_SHA256=" + "a" * 64,
+                  "shopee-mcp:remote"], check=True)
+              healthy()
+              client = httpx.post(origin + "/register", json={
+                  "redirect_uris": ["https://chatgpt.com/connector/oauth/synthetic-test"],
+                  "token_endpoint_auth_method": "none",
+                  "grant_types": ["authorization_code", "refresh_token"], "scope": "shopee"})
+              assert client.status_code == 201
+              subprocess.run(["docker", "restart", "shopee-remote-test"], check=True)
+              healthy()
+              r = httpx.get(origin + "/authorize", params={
+                  "client_id": client.json()["client_id"], "response_type": "code",
+                  "redirect_uri": "https://chatgpt.com/connector/oauth/synthetic-test",
+                  "scope": "shopee", "code_challenge": "x" * 43,
+                  "code_challenge_method": "S256", "resource": origin + "/mcp"})
+              assert r.status_code == 302 and "/connect?flow=" in r.headers["location"]
+              print("Remote container, writable volume and OAuth registration across restart: OK")
+          finally:
+              subprocess.run(["docker", "rm", "-f", "shopee-remote-test"], check=False)
+              subprocess.run(["docker", "volume", "rm", "shopee-oauth-test"], check=False)
+          PYCODE
