@@ -150,7 +150,7 @@ function addProductCard(p){
   const trendLine=el("p","text-xs mt-1 "+trendColor,trend+(p.sales_change_since_last_scan!==null?" ("+p.sales_change_since_last_scan+")":""));
   body.append(trendLine);
   const commission=p.commission_rate_fraction ? (Number(p.commission_rate_fraction)*100).toFixed(1).replace(".",",")+"% comissão estimada" : "Comissão não informada";
-  body.append(el("p","muted text-xs mt-1",commission));
+  body.append(el("p","muted text-xs mt-1",commission));\n  if(p.search_keyword) body.append(el("p","muted text-xs mt-1","Categoria: "+p.search_keyword));
   const actions=el("div","flex flex-wrap gap-2 mt-3");
   const open=el("a","btn secondary text-xs","Abrir produto");
   open.href=p.product_url; open.target="_blank"; open.rel="noopener noreferrer";
@@ -175,7 +175,24 @@ async function makeAffiliateLink(p,button){
     setTimeout(()=>{button.textContent="Gerar link";button.disabled=false;},1800);
   }catch(e){button.textContent="Falhou";button.disabled=false;alert(e.message);}
 }
-async function loadTrends(){
+
+async function autoDiscover(){
+  $("autoBtn").disabled=true;
+  $("autoBtn").textContent="Garimpando categorias...";
+  $("results").replaceChildren(el("div","panel rounded-2xl p-5 text-center muted text-sm","Consultando ofertas de Casa, Beleza, Moda, Cozinha, Pet, Eletrônicos, Fitness e Acessórios..."));
+  try{
+    const r=await fetch("/api/discover",{method:"POST"});
+    const d=await r.json();
+    if(!r.ok) throw new Error(d.error?.message || "O garimpo automático falhou.");
+    lastOffers=d.data.offers||[];
+    $("resultCount").textContent=lastOffers.length+" produtos únicos";
+    $("results").replaceChildren();
+    if(!lastOffers.length){showError("Nenhum produto retornado nessas categorias. Tente uma busca por palavra-chave.");return;}
+    lastOffers.forEach(addProductCard);
+  }catch(e){showError(e.message || "Erro no garimpo automático.");}
+  finally{$("autoBtn").disabled=false;$("autoBtn").textContent="Garimpo automático em 8 categorias";}
+}
+\nasync function loadTrends(){
   $("trendList").replaceChildren(el("span","muted text-sm","Buscando sinais de tendência..."));
   try{
     const r=await fetch("/api/trends");
@@ -194,7 +211,7 @@ $("searchForm").addEventListener("submit",e=>{e.preventDefault();searchProducts(
 $("tabBest").addEventListener("click",()=>{activeTab="best";$("trendPanel").classList.add("hidden");$("tabBest").className="btn primary flex-1";$("tabTrends").className="btn secondary flex-1";});
 $("tabTrends").addEventListener("click",()=>{activeTab="trends";$("trendPanel").classList.remove("hidden");$("tabBest").className="btn secondary flex-1";$("tabTrends").className="btn primary flex-1";loadTrends();});
 $("refreshTrends").addEventListener("click",loadTrends);
-loadStatus();
+$("autoBtn").addEventListener("click",autoDiscover);\nloadStatus();
 </script>
 </body>
 </html>
