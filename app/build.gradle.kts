@@ -17,7 +17,7 @@ chaquopy {
         buildPython("python")
         pip {
             install("httpx==0.28.1")
-            install("jsonschema==4.25.1")
+            install("jsonschema==4.17.3")
             install("starlette==1.7.0")
             install("uvicorn==0.38.0")
             install("python-dotenv==1.2.3")
