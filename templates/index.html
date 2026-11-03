@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#111827">
+  <title>Shopee Afiliado</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body{background:#0b1020;color:#e5e7eb;font-family:system-ui,-apple-system,sans-serif}
+    .panel{background:#141b2d;border:1px solid #29334a}
+    .muted{color:#9ca3af}
+    .btn{border-radius:13px;padding:11px 14px;font-weight:650}
+    .primary{background:#f97316;color:#fff}
+    .secondary{background:#263149;color:#e5e7eb}
+    input,select{background:#0f172a;border:1px solid #334155;color:#f8fafc;border-radius:12px;padding:12px;width:100%;min-width:0}
+    button:disabled{opacity:.55}
+    .safe-bottom{padding-bottom:max(18px,env(safe-area-inset-bottom))}
+  </style>
+</head>
+<body>
+  <main class="max-w-3xl mx-auto px-4 pt-5 safe-bottom">
+    <header class="flex items-center justify-between gap-3 mb-5">
+      <div>
+        <p class="text-orange-400 text-xs font-bold tracking-widest uppercase">Painel de afiliados</p>
+        <h1 class="text-2xl font-black tracking-tight">Shopee <span class="text-orange-400">Garimpo</span></h1>
+        <p class="muted text-xs mt-1">Produtos, vendas e oportunidades em um só lugar.</p>
+      </div>
+      <div id="status" class="text-xs px-3 py-2 rounded-full panel">Conectando...</div>
+    </header>
+
+    <section class="panel rounded-2xl p-4 mb-4">
+      <div class="flex gap-2 mb-3">
+        <button id="tabBest" class="btn primary flex-1">Mais vendidos</button>
+        <button id="tabTrends" class="btn secondary flex-1">Tendências</button>
+      </div>
+      <form id="searchForm" class="space-y-3">
+        <label class="block text-sm font-semibold" for="keyword">O que vamos garimpar?</label>
+        <input id="keyword" maxlength="120" placeholder="Ex.: organizador, vestido, fone..." autocomplete="off" required>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-xs muted mb-1" for="sort">Ordenar por</label>
+            <select id="sort">
+              <option value="2">Mais vendidos</option>
+              <option value="5">Maior comissão</option>
+              <option value="1">Relevância</option>
+              <option value="4">Menor preço</option>
+              <option value="3">Maior preço</option>
+            </select>
+          </div>
+          <div class="flex items-end">
+            <button id="searchBtn" class="btn primary w-full" type="submit">Buscar produtos</button>
+          </div>
+        </div>
+      </form>
+      <p class="muted text-xs mt-3">A busca de vendas usa os dados disponíveis na API oficial da sua conta.</p>
+    </section>
+
+    <section id="trendPanel" class="panel rounded-2xl p-4 mb-4 hidden">
+      <div class="flex items-center justify-between mb-2">
+        <div>
+          <h2 class="font-bold">Assuntos em alta no Brasil</h2>
+          <p class="muted text-xs">Sinal de procura externa, não vendas Shopee.</p>
+        </div>
+        <button id="refreshTrends" class="btn secondary text-xs">Atualizar</button>
+      </div>
+      <div id="trendList" class="flex flex-wrap gap-2">
+        <span class="muted text-sm">Carregando tendências...</span>
+      </div>
+    </section>
+
+    <section class="mb-3 flex items-center justify-between">
+      <h2 class="font-bold">Resultados</h2>
+      <span id="resultCount" class="muted text-xs"></span>
+    </section>
+    <section id="results" class="space-y-3">
+      <div class="panel rounded-2xl p-5 text-center muted text-sm">Faça uma busca para começar.</div>
+    </section>
+
+    <footer class="panel rounded-2xl p-4 mt-5">
+      <p class="text-sm font-semibold mb-1">Sobre vídeos de produtos</p>
+      <p class="muted text-xs leading-relaxed">A API oficial de afiliados não fornece o arquivo de vídeo do anúncio. O painel não copia vídeos de terceiros nem tenta contornar os controles da Shopee. Materiais próprios ou autorizados podem ser organizados separadamente.</p>
+      <p class="muted text-xs mt-3">Os dados de tendência do Google são relativos e podem ficar temporariamente indisponíveis. A evolução de vendas só aparece depois de observações comparáveis do mesmo período.</p>
+    </footer>
+  </main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let activeTab = "best";
+let lastOffers = [];
+
+function setStatus(text, good=true){
+  $("status").textContent = text;
+  $("status").className = "text-xs px-3 py-2 rounded-full border " + (good ? "border-emerald-700 text-emerald-300 bg-emerald-950/40" : "border-amber-700 text-amber-300 bg-amber-950/40");
+}
+function money(v){
+  if(v===null || v===undefined || v==="") return "Não informado";
+  const n=Number(v);
+  return Number.isFinite(n) ? n.toLocaleString("pt-BR",{style:"currency",currency:"BRL"}) : String(v);
+}
+function el(tag, cls, text){
+  const node=document.createElement(tag);
+  if(cls) node.className=cls;
+  if(text!==undefined) node.textContent=text;
+  return node;
+}
+async function loadStatus(){
+  try{
+    const r=await fetch("/api/status");
+    const d=await r.json();
+    const live=d.mode==="live" && !d.synthetic;
+    setStatus(live ? "API Shopee configurada" : "Modo demonstração", live);
+    if(!live) $("status").title="Dados sintéticos. Configure as credenciais locais para usar a API real.";
+  }catch(e){setStatus("Serviço indisponível",false);}
+}
+function showError(message){
+  $("results").replaceChildren(el("div","panel rounded-2xl p-4 text-sm text-amber-300",message));
+  $("resultCount").textContent="";
+}
+async function searchProducts(keyword){
+  $("searchBtn").disabled=true;
+  $("searchBtn").textContent="Buscando...";
+  $("results").replaceChildren(el("div","panel rounded-2xl p-5 text-center muted text-sm","Consultando ofertas..."));
+  try{
+    const r=await fetch("/api/search",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({keyword,sort_type:Number($("sort").value)})});
+    const d=await r.json();
+    if(!r.ok) throw new Error(d.error?.message || "A busca falhou.");
+    lastOffers=d.data.offers||[];
+    $("resultCount").textContent=lastOffers.length+" produtos";
+    $("results").replaceChildren();
+    if(!lastOffers.length){showError("Nenhum produto encontrado com esse termo. Tente uma busca mais específica.");return;}
+    lastOffers.forEach(addProductCard);
+  }catch(e){showError(e.message || "Erro ao consultar produtos.");}
+  finally{$("searchBtn").disabled=false;$("searchBtn").textContent="Buscar produtos";}
+}
+function addProductCard(p){
+  const card=el("article","panel rounded-2xl p-3 flex gap-3");
+  if(p.image_url){
+    const img=el("img","w-24 h-24 rounded-xl object-cover bg-slate-800 shrink-0");
+    img.src=p.image_url; img.alt=p.name||"Imagem do produto"; img.loading="lazy";
+    card.append(img);
+  }
+  const body=el("div","min-w-0 flex-1");
+  body.append(el("h3","font-semibold text-sm leading-snug",p.name||"Produto sem nome"));
+  body.append(el("p","text-orange-300 font-bold mt-1",money(p.price_min_brl)));
+  const sales=p.sales===null || p.sales===undefined ? "Vendas não informadas" : "Vendas: "+p.sales;
+  body.append(el("p","muted text-xs mt-1",sales));
+  const trend=p.trend_signal==="rising" ? "↑ vendas subindo" : p.trend_signal==="falling" ? "↓ vendas caindo" : p.trend_signal==="stable" ? "Vendas estáveis" : "Coletando histórico";
+  const trendColor=p.trend_signal==="rising"?"text-emerald-300":"muted";
+  const trendLine=el("p","text-xs mt-1 "+trendColor,trend+(p.sales_change_since_last_scan!==null?" ("+p.sales_change_since_last_scan+")":""));
+  body.append(trendLine);
+  const commission=p.commission_rate_fraction ? (Number(p.commission_rate_fraction)*100).toFixed(1).replace(".",",")+"% comissão estimada" : "Comissão não informada";
+  body.append(el("p","muted text-xs mt-1",commission));
+  const actions=el("div","flex flex-wrap gap-2 mt-3");
+  const open=el("a","btn secondary text-xs","Abrir produto");
+  open.href=p.product_url; open.target="_blank"; open.rel="noopener noreferrer";
+  actions.append(open);
+  const linkBtn=el("button","btn primary text-xs","Gerar link");
+  linkBtn.type="button";
+  linkBtn.addEventListener("click",()=>makeAffiliateLink(p,linkBtn));
+  actions.append(linkBtn);
+  body.append(actions);
+  card.append(body);
+  $("results").append(card);
+}
+async function makeAffiliateLink(p,button){
+  button.disabled=true;button.textContent="Gerando...";
+  try{
+    const r=await fetch("/api/link",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({product_url:p.product_url,sub_id:"garimpo"})});
+    const d=await r.json();
+    if(!r.ok) throw new Error(d.error?.message || "Não foi possível gerar o link.");
+    const url=d.data.affiliate_url;
+    await navigator.clipboard.writeText(url);
+    button.textContent="Link copiado!";
+    setTimeout(()=>{button.textContent="Gerar link";button.disabled=false;},1800);
+  }catch(e){button.textContent="Falhou";button.disabled=false;alert(e.message);}
+}
+async function loadTrends(){
+  $("trendList").replaceChildren(el("span","muted text-sm","Buscando sinais de tendência..."));
+  try{
+    const r=await fetch("/api/trends");
+    const d=await r.json();
+    $("trendList").replaceChildren();
+    if(!d.trends?.length){$("trendList").append(el("span","muted text-sm",d.message||"Nenhuma tendência disponível agora."));return;}
+    d.trends.slice(0,20).forEach(item=>{
+      const b=el("button","btn secondary text-xs",item.keyword);
+      b.type="button";
+      b.addEventListener("click",()=>{$("keyword").value=item.keyword;$("sort").value="2";$("trendPanel").classList.add("hidden");searchProducts(item.keyword);});
+      $("trendList").append(b);
+    });
+  }catch(e){$("trendList").replaceChildren(el("span","muted text-sm","Não foi possível carregar tendências agora."));}
+}
+$("searchForm").addEventListener("submit",e=>{e.preventDefault();searchProducts($("keyword").value.trim());});
+$("tabBest").addEventListener("click",()=>{activeTab="best";$("trendPanel").classList.add("hidden");$("tabBest").className="btn primary flex-1";$("tabTrends").className="btn secondary flex-1";});
+$("tabTrends").addEventListener("click",()=>{activeTab="trends";$("trendPanel").classList.remove("hidden");$("tabBest").className="btn secondary flex-1";$("tabTrends").className="btn primary flex-1";loadTrends();});
+$("refreshTrends").addEventListener("click",loadTrends);
+loadStatus();
+</script>
+</body>
+</html>
