@@ -26,7 +26,7 @@ chaquopy {
     }
     sourceSets {
         getByName("main") {
-            srcDir("../../vendor/shopee-br-affiliate-mcp/src")
+            srcDir("../vendor/shopee-br-affiliate-mcp/src")
         }
     }
 }
