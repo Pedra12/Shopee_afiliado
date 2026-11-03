@@ -186,7 +186,7 @@ async function autoDiscover(){
     const d=await r.json();
     if(!r.ok) throw new Error(d.error?.message || "O garimpo automático falhou.");
     lastOffers=d.data.offers||[];
-    $("resultCount").textContent=lastOffers.length+" produtos únicos";
+    $("resultCount").textContent=lastOffers.length+" produtos · "+d.data.keywords_scanned.length+" categorias";
     $("results").replaceChildren();
     if(!lastOffers.length){showError("Nenhum produto retornado nessas categorias. Tente uma busca por palavra-chave.");return;}
     lastOffers.forEach(addProductCard);
