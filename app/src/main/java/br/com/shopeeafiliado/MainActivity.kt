@@ -117,16 +117,14 @@ class MainActivity : Activity() {
         }
         val appId = addField("Shopee App ID", prefs.getString("app_id", "") ?: "")
         val appSecret = addField("Shopee App Secret", prefs.getString("app_secret", "") ?: "", true)
-        val account = addField("Referência da conta", prefs.getString("account", "") ?: "")
         AlertDialog.Builder(this)
             .setTitle("Configurar API Shopee")
-            .setMessage("As credenciais ficam no armazenamento privado deste aparelho. Sem credenciais, o painel abre em modo de demonstração.")
+            .setMessage("Informe somente o App ID e o App Secret. A referência da conta é um rótulo interno do aplicativo e será configurada automaticamente. Sem credenciais, o painel abre em modo de demonstração.")
             .setView(fields)
             .setPositiveButton("Salvar e abrir") { _, _ ->
                 prefs.edit()
                     .putString("app_id", appId.text.toString().trim())
                     .putString("app_secret", appSecret.text.toString())
-                    .putString("account", account.text.toString().trim())
                     .putBoolean("configured", true)
                     .apply()
                 startLocalApp()
@@ -155,7 +153,7 @@ class MainActivity : Activity() {
                 "start_server",
                 prefs.getString("app_id", "") ?: "",
                 prefs.getString("app_secret", "") ?: "",
-                prefs.getString("account", "") ?: "",
+                "conta_principal",
                 appFiles.absolutePath,
                 template.absolutePath
             )
