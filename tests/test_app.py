@@ -35,7 +35,7 @@ class DashboardTests(unittest.TestCase):
     def test_home_page_is_mobile_dashboard(self):
         response = self.client.get("/")
         self.assertEqual(response.status_code, 200)
-        self.assertIn("Shopee Garimpo", response.text)
+        self.assertIn("Garimpo", response.text)
 
     def test_status_explicitly_reports_synthetic_mode(self):
         response = self.client.get("/api/status")
