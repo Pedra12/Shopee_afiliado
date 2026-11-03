@@ -31,3 +31,9 @@ jobs:
         env:
           PYTHONPATH: src:tests
       - run: python local_test.py --fixture --extended
+
+      - name: Run dashboard integration tests
+        working-directory: .
+        run: python -m unittest discover -s tests -v
+        env:
+          SHOPEE_MODE: fixture
